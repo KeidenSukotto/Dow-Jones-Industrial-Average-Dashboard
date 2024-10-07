@@ -1,0 +1,109 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © Keiden
+
+//@version=5
+indicator(title = "Dow Jones Index 30 (US30) - CNBC Summary Dashboard", shorttitle = "US30 Dashboard", overlay = true)
+
+
+// fetching data
+
+[BA, _BA] = request.security('BA','D', [close, close[1]])
+[GS, _GS] = request.security('GS','D', [close, close[1]])
+[INTC, _INTC] = request.security('INTC','D', [close, close[1]])
+[DOW, _DOW] = request.security('DOW','D', [close, close[1]])
+[DIS, _DIS] = request.security('DIS','D', [close, close[1]])
+[AXP, _AXP] = request.security('AXP','D', [close, close[1]])
+[WBA, _WBA] = request.security('WBA','D', [close, close[1]])
+[JPM, _JPM] = request.security('JPM','D', [close, close[1]])
+[MMM, _MMM] = request.security('MMM','D', [close, close[1]])
+[VZ, _VZ] = request.security('VZ','D', [close, close[1]])
+[MSFT, _MSFT] = request.security('MSFT','D', [close, close[1]])
+[CRM, _CRM] = request.security('CRM','D', [close, close[1]])
+[HON, _HON] = request.security('HON','D', [close, close[1]])
+[KO, _KO] = request.security('KO','D', [close, close[1]])
+[CAT, _CAT] = request.security('CAT','D', [close, close[1]])
+[AAPL, _AAPL] = request.security('AAPL','D', [close, close[1]])
+[CVX, _CVX] = request.security('CVX','D', [close, close[1]])
+[TRV, _TRV] = request.security('TRV','D', [close, close[1]])
+[HD, _HD] = request.security('HD','D', [close, close[1]])
+[PG, _PG] = request.security('PG','D', [close, close[1]])
+[AMGN, _AMGN] = request.security('AMGN','D', [close, close[1]])
+[WMT, _WMT] = request.security('WMT','D', [close, close[1]])
+[CSCO, _CSCO] = request.security('CSCO','D', [close, close[1]])
+[IBM, _IBM] = request.security('IBM','D', [close, close[1]])
+[NKE, _NKE] = request.security('NKE','D', [close, close[1]])
+[JNJ, _JNJ] = request.security('JNJ','D', [close, close[1]])
+[MRK, _MRK] = request.security('MRK','D', [close, close[1]])
+[MCD, _MCD] = request.security('MCD','D', [close, close[1]])
+[UNH, _UNH] = request.security('UNH','D', [close, close[1]])
+[V, _V] = request.security('V','D', [close, close[1]])
+
+
+// calculations
+
+closeValues = array.from(BA,GS,INTC,DOW,DIS,AXP,
+ WBA,JPM,MMM,VZ,MSFT,CRM,HON,KO,CAT,AAPL,CVX,TRV,
+ HD,PG,AMGN,WMT,CSCO,IBM,NKE,JNJ,MRK,MCD,UNH,V)
+
+p_closeValues = array.from(_BA,_GS,_INTC,_DOW,_DIS,_AXP,
+ _WBA,_JPM,_MMM,_VZ,_MSFT,_CRM,_HON,_KO,_CAT,_AAPL,_CVX,_TRV,
+ _HD,_PG,_AMGN,_WMT,_CSCO,_IBM,_NKE,_JNJ,_MRK,_MCD,_UNH,_V)
+
+
+calculations() =>
+    uptrend = 0
+    downtrend = 0
+
+    uptrend_change = 0.0
+    downtrend_change = 0.0
+
+    uptrend_percentage_change = 0.0
+    downtrend_percentage_change = 0.0
+
+    for i = 0 to array.size(id = closeValues) - 1
+        current_close = array.get(id = closeValues, index = i)
+        previous_close = array.get(id = p_closeValues, index = i)
+        change = current_close - previous_close
+        percentage_change = (change / previous_close) * 100
+
+        if percentage_change > 0
+            uptrend := uptrend + 1
+            uptrend_change := uptrend_change + change
+            uptrend_percentage_change := uptrend_percentage_change + percentage_change
+
+        else if percentage_change < 0
+            downtrend := downtrend + 1
+            downtrend_change := downtrend_change + change
+            downtrend_percentage_change := downtrend_percentage_change + percentage_change
+
+    up_percent = (uptrend / 30) * 100
+    down_percent = (downtrend / 30) * 100
+
+    [uptrend, up_percent, uptrend_change, uptrend_percentage_change, downtrend, down_percent, downtrend_change, downtrend_percentage_change]
+
+
+[uptrend, uptrendPerc, uptrendChange, uptrendCperc, downtrend, downtrendPerc, downtrendChange, downtrendCperc] = calculations()
+
+// table
+
+var dashboard = table.new(position = position.top_right, columns = 3, rows = 5, border_width = 5, frame_color = color.new(color.white, 100))
+
+table.cell(dashboard, 0, 0, text = "Trend", text_color = color.white, text_halign = text.align_left, text_valign = text.align_center, bgcolor = color.gray)
+table.cell(dashboard, 1, 0, text = "Uptrend", text_color = color.white, text_halign = text.align_center, text_valign = text.align_center, bgcolor = color.lime, width = 5)
+table.cell(dashboard, 2, 0, text = "Downtrend", text_color = color.white, text_halign = text.align_center, text_valign = text.align_center, bgcolor = color.red, width = 5)
+
+table.cell(dashboard, 0, 1, text = "Stocks", text_color = color.white, text_halign = text.align_left, text_valign = text.align_center, bgcolor = color.gray)
+table.cell(dashboard, 1, 1, text = str.tostring(uptrend), text_color = color.white, text_halign = text.align_center, text_valign = text.align_center, bgcolor = color.lime, width = 5)
+table.cell(dashboard, 2, 1, text = str.tostring(downtrend), text_color = color.white, text_halign = text.align_center, text_valign = text.align_center, bgcolor = color.red, width = 5)
+
+table.cell(dashboard, 0, 2, text = "Stocks (%)", text_color = color.white, text_halign = text.align_left, text_valign = text.align_center, bgcolor = color.gray)
+table.cell(dashboard, 1, 2, text = str.tostring(uptrendPerc), text_color = color.white, text_halign = text.align_center, text_valign = text.align_center, bgcolor = color.lime, width = 5)
+table.cell(dashboard, 2, 2, text = str.tostring(downtrendPerc), text_color = color.white, text_halign = text.align_center, text_valign = text.align_center, bgcolor = color.red, width = 5)
+
+table.cell(dashboard, 0, 3, text = "Change", text_color = color.white, text_halign = text.align_left, text_valign = text.align_center, bgcolor = color.gray)
+table.cell(dashboard, 1, 3, text = str.tostring(uptrendChange), text_color = color.white, text_halign = text.align_center, text_valign = text.align_center, bgcolor = color.lime, width = 5)
+table.cell(dashboard, 2, 3, text = str.tostring(downtrendChange), text_color = color.white, text_halign = text.align_center, text_valign = text.align_center, bgcolor = color.red, width = 5)
+
+table.cell(dashboard, 0, 4, text = "Change (%)", text_color = color.white, text_halign = text.align_left, text_valign = text.align_center, bgcolor = color.gray)
+table.cell(dashboard, 1, 4, text = str.tostring(uptrendCperc), text_color = color.white, text_halign = text.align_center, text_valign = text.align_center, bgcolor = color.lime, width = 5)
+table.cell(dashboard, 2, 4, text = str.tostring(downtrendCperc), text_color = color.white, text_halign = text.align_center, text_valign = text.align_center, bgcolor = color.red, width = 5)
